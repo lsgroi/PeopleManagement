@@ -1,0 +1,70 @@
+﻿@page "/searchpeople"
+
+@using PeopleManagement.Data
+@inject IPeopleManagementService PeopleManagementService
+
+<h1>Search People</h1>
+
+<div class="row margin-bottom-20">
+    <div class="col-md-12">
+        <button type="button" @onclick="@Search">Search</button>
+        <input type="text" @bind-value="@_searchTerm" />
+        <label>
+            Group:
+            <select @bind="@_group">
+                @if (_groups != null && _groups.Any())
+                {
+                    <option selected value="-1"> - </option>
+                    @foreach (var group in _groups)
+                    {
+                        <option value="@group.Id">@group.Name</option>
+                    }
+                }
+            </select>
+        </label>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date Added</th>
+            <th>Group</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_people != null)
+        { 
+            @foreach (var person in _people)
+            {
+                <tr>
+                    <td>@person.Name</td>
+                    <td>@person.DateAdded.ToShortDateString()</td>
+                    <td>@person.Group.Name</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Person> _people;
+    private List<Group> _groups;
+    private string _searchTerm = string.Empty;
+    private int _group = -1;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groups = await PeopleManagementService.GetGroups();
+    }
+
+    private async Task Search()
+    {
+        _people = null;
+        _people = _group == -1
+            ? await PeopleManagementService.Search(_searchTerm)
+            : await PeopleManagementService.Search(_searchTerm, _group);
+    }
+}

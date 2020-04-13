@@ -1,0 +1,64 @@
+﻿@page "/addperson"
+
+@using PeopleManagement.Data
+@inject IPeopleManagementService PeopleManagementService
+
+<h1>Add a Person</h1>
+
+<EditForm Model="@_model" OnValidSubmit="HandleValidSubmit">
+    @if (_added)
+    {
+        <div class="alert alert-success">
+            <strong>Success!</strong> Person added.
+        </div>
+    }
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p>
+        <label>
+            Name:
+            <InputText @bind-Value="_model.Name" />
+        </label>
+    </p>
+
+    <p>
+        <label>
+            Group:
+            <select @bind="_model.GroupId">
+                @if (_model?.Groups != null && _model.Groups.Any())
+                {
+                    @foreach (var group in _model.Groups)
+                    {
+                        <option value="@group.Id">@group.Name</option>
+                    }
+                }
+            </select>
+        </label>
+    </p>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+@code {
+    private Models.AddPerson _model = new Models.AddPerson();
+    private bool _added = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = new Models.AddPerson
+        {
+            Groups = await PeopleManagementService.GetGroups()
+        };
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await PeopleManagementService.AddPerson(_model.Name, _model.GroupId);
+
+        _model.Name = "";
+        _model.GroupId = 0;
+        _added = true;
+    }
+}
